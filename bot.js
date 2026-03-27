@@ -4,13 +4,23 @@ const qrcode = require('qrcode-terminal');
 // anti double message
 const processedMessages = new Set();
 
-// init client
+// init client (fix untuk Railway)
 const client = new Client({
-    authStrategy: new LocalAuth()
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu'
+        ]
+    }
 });
 
 // QR
 client.on('qr', qr => {
+    console.log('QR RECEIVED, scan ya 👇');
     qrcode.generate(qr, { small: true });
 });
 
@@ -20,7 +30,7 @@ client.on('ready', () => {
 });
 
 // message handler
-client.on('message', msg => {
+client.on('message', async msg => {
 
     // hindari double reply
     if (processedMessages.has(msg.id.id)) return;
@@ -28,7 +38,10 @@ client.on('message', msg => {
 
     const text = msg.body.toLowerCase();
 
-    // helper keyword
+    // efek typing biar natural 😏
+    const chat = await msg.getChat();
+    await chat.sendStateTyping();
+
     const contains = (keywords) => {
         return keywords.some(word => text.includes(word));
     };
@@ -45,7 +58,7 @@ Kami melayani:
 2. Wholesale / Reseller
 3. Service & Garansi
 
-Silakan ketik atau pilih ya kak 😊`);
+Silakan ketik kebutuhan kakak ya 😊`);
     }
 
     // ========================
@@ -64,9 +77,9 @@ Silakan ketik atau pilih ya kak 😊`);
 
 Untuk service center Surabaya:
 
-📍 Jl. Kedung Doro No.275, Wonorejo, Kec. Tegalsari, Surabaya
+📍 Jl. Kedung Doro No.275, Wonorejo, Tegalsari
 
-Ini link mapsnya ya:
+Link maps:
 https://maps.google.com/?q=Jl+Kedung+Doro+No+275+Surabaya`);
     }
 
@@ -86,7 +99,9 @@ Kakak mau cari produk brand apa?
 
 1. KIRIN
 2. WASSER
-3. ROCA`);
+3. ROCA
+
+Tinggal ketik nama brand ya 😊`);
     }
 
     // ========================
@@ -107,12 +122,12 @@ Produk yang diminati:`);
     }
 
     // ========================
-    // BRAND (contoh lanjut)
+    // BRAND
     // ========================
     else if (text.includes('kirin')) {
         msg.reply(`Produk KIRIN tersedia kak 👍
 
-Silakan kirim tipe produk yang dicari ya kak 😊`);
+Silakan kirim tipe produk yang dicari ya 😊`);
     }
 
     else if (text.includes('wasser')) {
@@ -128,7 +143,7 @@ Silakan kirim kebutuhan kakak ya 😊`);
     }
 
     // ========================
-    // FALLBACK (kalau tidak ngerti)
+    // FALLBACK
     // ========================
     else {
         msg.reply(`Mohon maaf kak 🙏
